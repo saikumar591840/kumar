@@ -1,9 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useContext } from 'react';
 import AuthContext from '../context/AuthContext';
+import ThemeContext from '../context/ThemeContext';
 
 const Sidebar = () => {
   const { user, logout } = useContext(AuthContext);
+  const { isDark, toggleTheme } = useContext(ThemeContext);
   const location = useLocation();
 
   const handleLogout = () => {
@@ -41,9 +43,21 @@ const Sidebar = () => {
           <span className="icon">✓</span>
           <span>My Tasks</span>
         </Link>
+        <Link to="/calendar" className={`nav-item ${isActive('/calendar') ? 'active' : ''}`}>
+          <span className="icon">📅</span>
+          <span>Calendar</span>
+        </Link>
+        <Link to="/activity" className={`nav-item ${isActive('/activity') ? 'active' : ''}`}>
+          <span className="icon">📋</span>
+          <span>Activity Log</span>
+        </Link>
       </nav>
 
       <div className="sidebar-footer">
+        <button onClick={toggleTheme} className="theme-toggle-btn">
+          <span className="icon">{isDark ? '☀️' : '🌙'}</span>
+          <span>{isDark ? 'Light' : 'Dark'}</span>
+        </button>
         <button onClick={handleLogout} className="logout-btn">
           <span className="icon">🚪</span>
           <span>Logout</span>

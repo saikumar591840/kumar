@@ -80,26 +80,84 @@ To run this project locally on your machine, follow these steps:
 
 ## 🌐 Deployment Instructions
 
-This application is configured for a monolithic production deployment (where Node.js serves the compiled React app) or a decoupled deployment. 
+This application supports both a split deployment and a single backend-powered deployment. It is now ready to share.
 
-**Recommended Split Deployment:**
+### Environment examples
 
-1.  **Backend (Railway):**
-    *   Create a new project on [Railway.app](https://railway.app/).
-    *   Set the Root Directory to `/backend` in settings.
-    *   Add your environment variables (`PORT`, `MONGO_URI`, `JWT_SECRET`, `NODE_ENV=production`).
-    *   Generate a public domain URL.
+- `backend/.env.example`
+- `frontend/.env.example`
 
-2.  **Frontend (Vercel):**
-    *   Import your repository into [Vercel](https://vercel.com/).
-    *   Set the Root Directory to `frontend`.
-    *   Add an environment variable `VITE_API_URL` pointing to your new Railway backend URL (ensure there is no trailing slash).
-    *   Deploy!
+Copy these into `backend/.env` and `frontend/.env` before running locally or deploying.
 
-## 🔗 Live URL
+### Option 1: Deploy backend + frontend separately
 
-*Placeholder for live URL once deployed:* 
-**[https://team-task-manager-demo.vercel.app](https://team-task-manager-demo.vercel.app)** (Replace with actual link)
+1.  **Backend**
+    *   Deploy the `backend/` folder as a Node.js service on Railway, Render, or Heroku.
+    *   Use `npm install` and `npm start`.
+    *   Set environment variables:
+        * `PORT=5000`
+        * `MONGO_URI=<your MongoDB connection string>`
+        * `JWT_SECRET=<your jwt secret>`
+        * `NODE_ENV=production`
+
+2.  **Frontend**
+    *   Deploy the `frontend/` folder on Vercel or Netlify.
+    *   Set the environment variable:
+        * `VITE_API_URL=https://<your-backend-url>`
+    *   Build command: `npm install && npm run build`
+    *   Publish directory: `dist`
+
+### Option 2: Deploy a single backend service that serves the frontend
+
+This repo now supports a single backend deployment with frontend build automation.
+
+1.  Deploy the `backend/` folder as your service root.
+2.  Use the build command:
+    ```bash
+    npm run build
+    ```
+3.  Use the start command:
+    ```bash
+    npm start
+    ```
+4.  The backend will serve the compiled React app from `frontend/dist` in production.
+
+### Option 3: Deploy with Docker (recommended for full-stack share)
+
+This repository includes a root-level `Dockerfile` and `docker-compose.yml` for a complete production deployment.
+
+1.  Build and run locally with Docker Compose:
+    ```bash
+    docker compose up --build
+    ```
+2.  This will start:
+    * `app` on `http://localhost:5000`
+    * `mongo` as the database service
+3.  Use the `MONGO_URI` in `docker-compose.yml` for future containerized deployments.
+
+### Vercel frontend deployment
+
+The `frontend/vercel.json` file is included for easy deployment on Vercel.
+
+- Build command: `npm install && npm run build`
+- Output directory: `dist`
+- Set `VITE_API_URL` to your backend public URL.
+
+### Example provider setup
+
+- On **Render** or **Railway**, choose the `backend/` folder as the service root.
+- Use `npm install` to install dependencies.
+- The `heroku-postbuild` script will build the frontend automatically after install.
+- Then `npm start` will launch the app.
+
+## 🔗 Shareable deployment path
+
+For the fastest public share link:
+
+- **Option A:** Docker deployment with `docker compose up --build`
+- **Option B:** Backend on Railway/Render and frontend on Vercel/Netlify
+
+This repository is now fully deployment-ready with local Docker, cloud backend deploy, and hosted frontend configuration.
 
 ---
-*Developed with modern web practices.*
+*Developed with production deployment support, Docker, and hosted frontend configuration.*

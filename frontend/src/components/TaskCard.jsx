@@ -10,7 +10,12 @@ const TaskCard = ({ task, columnStatus, onUpdateStatus, onDelete }) => {
   return (
     <div className={`task-card modern-card status-border-${columnStatus.replace(/\s+/g, '-').toLowerCase()}`}>
       <div className="task-card-header">
-        <span className="project-badge">{task.assignedTo ? task.assignedTo.name : 'Unassigned'}</span>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <span className="project-badge">{task.assignedTo ? task.assignedTo.name : 'Unassigned'}</span>
+          <span className={`priority-badge priority-${task.priority?.toLowerCase() || 'medium'}`}>
+            {task.priority || 'Medium'}
+          </span>
+        </div>
         {user?.role === 'Admin' && (
           <button 
             onClick={() => onDelete(task._id)} 

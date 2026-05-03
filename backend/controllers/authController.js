@@ -89,6 +89,32 @@ exports.login = async (req, res) => {
   }
 };
 
+// @desc    Forgot password (simulation)
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+    }
+
+    // In a real app, you'd send an email here
+    // For simulation, just return success
+    res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Get all users (for assigning tasks/members)
 // @route   GET /api/auth/users
 // @access  Private/Admin

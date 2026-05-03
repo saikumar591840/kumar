@@ -21,6 +21,7 @@ const ProjectDetails = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [assignedToFilter, setAssignedToFilter] = useState('All');
+  const [priorityFilter, setPriorityFilter] = useState('All');
 
   // Task Form State
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -31,6 +32,7 @@ const ProjectDetails = () => {
   const [assignedTo, setAssignedTo] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('Todo');
+  const [priority, setPriority] = useState('Medium');
 
   useEffect(() => {
     fetchProjectAndTasks();
@@ -80,7 +82,8 @@ const ProjectDetails = () => {
         description, 
         assignedTo: assignedTo || null,
         dueDate: dueDate || null,
-        status 
+        status,
+        priority
       });
       
       addToast('Task created successfully!', 'success');
@@ -93,6 +96,7 @@ const ProjectDetails = () => {
       setAssignedTo('');
       setDueDate('');
       setStatus('Todo');
+      setPriority('Medium');
       setShowTaskForm(false);
       fetchProjectAndTasks();
     } catch (err) {
@@ -236,6 +240,14 @@ const ProjectDetails = () => {
                 <input type="text" value={description} onChange={e => setDescription(e.target.value)} />
               </div>
               <div className="form-group">
+                <label>Priority</label>
+                <select value={priority} onChange={e => setPriority(e.target.value)} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '0.75rem 1rem', color: 'white' }}>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Assign To (Member ID)</label>
                 <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '0.75rem 1rem', color: 'white' }}>
                   <option value="">Unassigned</option>
@@ -274,6 +286,16 @@ const ProjectDetails = () => {
           <option value="Done">Done</option>
         </select>
         <select 
+          value={priorityFilter} 
+          onChange={(e) => setPriorityFilter(e.target.value)}
+          style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'rgba(15, 23, 42, 0.6)', color: 'white' }}
+        >
+          <option value="All">All Priorities</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+        <select 
           value={assignedToFilter} 
           onChange={(e) => setAssignedToFilter(e.target.value)}
           style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'rgba(15, 23, 42, 0.6)', color: 'white' }}
@@ -292,6 +314,7 @@ const ProjectDetails = () => {
           const filteredTasks = tasks.filter(task => {
             const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
+            const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
             
             let matchesAssignee = true;
             if (assignedToFilter === 'Unassigned') {
@@ -300,7 +323,7 @@ const ProjectDetails = () => {
               matchesAssignee = task.assignedTo?._id === assignedToFilter || task.assignedTo === assignedToFilter;
             }
             
-            return matchesSearch && matchesStatus && matchesAssignee;
+            return matchesSearch && matchesStatus && matchesPriority && matchesAssignee;
           });
 
           return (

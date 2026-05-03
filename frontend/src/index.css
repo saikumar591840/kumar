@@ -16,6 +16,22 @@
   --warning: #fbbf24;
 }
 
+[data-theme="light"] {
+  --primary: #7c3aed;
+  --primary-hover: #8b5cf6;
+  --secondary: #00f0ff;
+  --bg-color: #f8fafc;
+  --card-bg: #ffffff;
+  --card-hover: #f1f5f9;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-glow: rgba(124, 58, 237, 0.3);
+  --error: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -380,6 +396,35 @@ body {
   box-shadow: 0 4px 15px rgba(251, 113, 133, 0.2);
 }
 
+.sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.theme-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  background: rgba(124, 58, 237, 0.05);
+  border: 1px solid rgba(124, 58, 237, 0.1);
+  color: var(--primary);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(124, 58, 237, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
+}
+
 /* Page Containers */
 .page-container {
   animation: slideUpFade 0.5s ease-out forwards;
@@ -533,6 +578,29 @@ body {
   border-radius: 1rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.priority-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.3rem 0.75rem;
+  border-radius: 1rem;
+  text-transform: uppercase;
+}
+
+.priority-low {
+  background: rgba(34, 197, 153, 0.2);
+  color: var(--success);
+}
+
+.priority-medium {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+}
+
+.priority-high {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--error);
 }
 
 .overdue-badge {

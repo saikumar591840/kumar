@@ -68,6 +68,7 @@ const Login = () => {
         
         <div className="auth-footer">
           <p>Don't have an account? <Link to="/signup">Sign up here</Link></p>
+          <p><Link to="/forgot-password" style={{ color: 'var(--primary)' }}>Forgot password?</Link></p>
         </div>
       </div>
     </div>

@@ -14,15 +14,25 @@ const Tasks = () => {
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [priorityFilter, setPriorityFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   useEffect(() => {
     fetchMyTasks();
-  }, []);
+  }, [searchQuery, statusFilter, priorityFilter, sortBy, sortOrder]);
 
   const fetchMyTasks = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/api/tasks/my-tasks');
+      const params = new URLSearchParams({
+        search: searchQuery,
+        status: statusFilter,
+        priority: priorityFilter,
+        sortBy,
+        sortOrder
+      });
+      const { data } = await api.get(`/api/tasks/my-tasks?${params}`);
       setTasks(data);
       setLoading(false);
     } catch (err) {
@@ -55,13 +65,6 @@ const Tasks = () => {
 
   if (loading) return <div className="loading-screen">Loading your tasks...</div>;
 
-  // Apply search and filters
-  const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
   return (
     <div className="page-container">
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
@@ -88,6 +91,34 @@ const Tasks = () => {
             <option value="In Progress">In Progress</option>
             <option value="Done">Done</option>
           </select>
+          <select 
+            value={priorityFilter} 
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'rgba(15, 23, 42, 0.6)', color: 'white' }}
+          >
+            <option value="All">All Priorities</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+          <select 
+            value={sortBy} 
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'rgba(15, 23, 42, 0.6)', color: 'white' }}
+          >
+            <option value="createdAt">Sort by Date</option>
+            <option value="dueDate">Sort by Due Date</option>
+            <option value="priority">Sort by Priority</option>
+            <option value="title">Sort by Title</option>
+          </select>
+          <select 
+            value={sortOrder} 
+            onChange={(e) => setSortOrder(e.target.value)}
+            style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'rgba(15, 23, 42, 0.6)', color: 'white' }}
+          >
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
+          </select>
         </div>
       </div>
 
@@ -98,10 +129,10 @@ const Tasks = () => {
         {['Todo', 'In Progress', 'Done'].map(columnStatus => (
           <div key={columnStatus} className="task-column">
             <h3 className={`column-header status-${columnStatus.replace(/\s+/g, '-').toLowerCase()}`}>
-              {columnStatus} <span className="task-count">{filteredTasks.filter(t => t.status === columnStatus).length}</span>
+              {columnStatus} <span className="task-count">{tasks.filter(t => t.status === columnStatus).length}</span>
             </h3>
             <div className="task-list">
-              {filteredTasks.filter(t => t.status === columnStatus).map(task => (
+              {tasks.filter(t => t.status === columnStatus).map(task => (
                 <TaskCard 
                   key={task._id} 
                   task={task} 
@@ -110,7 +141,7 @@ const Tasks = () => {
                   onDelete={handleDeleteTask} 
                 />
               ))}
-              {filteredTasks.filter(t => t.status === columnStatus).length === 0 && (
+              {tasks.filter(t => t.status === columnStatus).length === 0 && (
                 <p className="empty-state">No tasks here</p>
               )}
             </div>

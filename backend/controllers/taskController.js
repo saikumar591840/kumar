@@ -1,5 +1,6 @@
 const Task = require('../models/Task');
 const Project = require('../models/Project');
+const Activity = require('../models/Activity');
 
 // @desc    Get all tasks for a project
 // @route   GET /api/projects/:projectId/tasks
@@ -24,17 +25,41 @@ exports.getTasks = async (req, res, next) => {
   }
 };
 
-// @desc    Get all tasks for user
+// @desc    Get all tasks for user with filters
 // @route   GET /api/tasks/my-tasks
 // @access  Private
 exports.getMyTasks = async (req, res, next) => {
   try {
-    let tasks;
-    if (req.user.role === 'Admin') {
-      tasks = await Task.find().populate('assignedTo', 'name email').populate('projectId', 'name');
-    } else {
-      tasks = await Task.find({ assignedTo: req.user._id }).populate('assignedTo', 'name email').populate('projectId', 'name');
+    const { search, status, priority, sortBy, sortOrder } = req.query;
+    
+    let query = {};
+    if (req.user.role === 'Member') {
+      query.assignedTo = req.user._id;
     }
+
+    // Search filter
+    if (search) {
+      query.title = { $regex: search, $options: 'i' };
+    }
+
+    // Status filter
+    if (status && status !== 'All') {
+      query.status = status;
+    }
+
+    // Priority filter
+    if (priority && priority !== 'All') {
+      query.priority = priority;
+    }
+
+    let sort = {};
+    if (sortBy) {
+      sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    } else {
+      sort.createdAt = -1; // Default sort by creation date desc
+    }
+
+    const tasks = await Task.find(query).populate('assignedTo', 'name email').populate('projectId', 'name').sort(sort);
     res.json(tasks);
   } catch (error) {
     next(error);
@@ -46,7 +71,7 @@ exports.getMyTasks = async (req, res, next) => {
 // @access  Private/Admin
 exports.createTask = async (req, res, next) => {
   try {
-    const { title, description, assignedTo, dueDate, status } = req.body;
+    const { title, description, assignedTo, dueDate, status, priority } = req.body;
     
     const project = await Project.findById(req.params.projectId);
     if (!project) {
@@ -59,7 +84,17 @@ exports.createTask = async (req, res, next) => {
       projectId: req.params.projectId,
       assignedTo,
       dueDate,
-      ...(status && { status })
+      ...(status && { status }),
+      ...(priority && { priority })
+    });
+
+    // Log activity
+    await Activity.create({
+      user: req.user._id,
+      action: 'created_task',
+      description: `Created task "${title}" in project "${project.name}"`,
+      projectId: req.params.projectId,
+      taskId: task._id
     });
 
     res.status(201).json(task);
@@ -92,6 +127,18 @@ exports.updateTask = async (req, res, next) => {
       { new: true }
     );
 
+    // Log activity if status changed
+    if (req.body.status && req.body.status !== task.status) {
+      const action = req.body.status === 'Done' ? 'completed_task' : 'updated_task';
+      await Activity.create({
+        user: req.user._id,
+        action,
+        description: `${req.body.status === 'Done' ? 'Completed' : 'Updated'} task "${task.title}" to ${req.body.status}`,
+        projectId: task.projectId,
+        taskId: task._id
+      });
+    }
+
     res.json(updatedTask);
   } catch (error) {
     next(error);
@@ -117,10 +164,27 @@ exports.deleteTask = async (req, res, next) => {
   }
 };
 
-// @desc    Get task statistics for dashboard
+// @desc    Get activity log
+// @route   GET /api/tasks/activities
+// @access  Private
+exports.getActivities = async (req, res, next) => {
+  try {
+    const activities = await Activity.find()
+      .populate('user', 'name')
+      .populate('projectId', 'name')
+      .sort({ createdAt: -1 })
+      .limit(50); // Limit to last 50 activities
+
+    res.json(activities);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get task statistics
 // @route   GET /api/tasks/stats
 // @access  Private
-exports.getTaskStats = async (req, res, next) => {
+exports.getStats = async (req, res, next) => {
   try {
     let tasks;
 
@@ -139,11 +203,30 @@ exports.getTaskStats = async (req, res, next) => {
       return t.status !== 'Done' && t.dueDate && new Date(t.dueDate) < now;
     }).length;
 
+    // Tasks per project
+    const tasksPerProject = {};
+    tasks.forEach(task => {
+      const projectName = task.projectId?.name || 'Unknown Project';
+      tasksPerProject[projectName] = (tasksPerProject[projectName] || 0) + 1;
+    });
+
+    // Tasks per user (for admin)
+    let tasksPerUser = {};
+    if (req.user.role === 'Admin') {
+      const allTasks = await Task.find().populate('assignedTo', 'name');
+      allTasks.forEach(task => {
+        const userName = task.assignedTo?.name || 'Unassigned';
+        tasksPerUser[userName] = (tasksPerUser[userName] || 0) + 1;
+      });
+    }
+
     res.json({
       total,
       completed,
       pending,
-      overdue
+      overdue,
+      tasksPerProject,
+      tasksPerUser
     });
 
   } catch (error) {

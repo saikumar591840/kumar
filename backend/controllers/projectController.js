@@ -1,5 +1,6 @@
 const Project = require('../models/Project');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 
 // @desc    Get all projects (Members can view)
 // @route   GET /api/projects
@@ -36,6 +37,14 @@ exports.createProject = async (req, res, next) => {
       description,
       createdBy: req.user._id,
       teamMembers: [req.user._id] // Creator is implicitly a member
+    });
+
+    // Log activity
+    await Activity.create({
+      user: req.user._id,
+      action: 'created_project',
+      description: `Created project "${name}"`,
+      projectId: project._id
     });
 
     res.status(201).json(project);

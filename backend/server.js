@@ -2,6 +2,7 @@ require('dotenv').config({ override: true });
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const fs = require('fs');
 const path = require('path');
 
 const authRoutes = require('./routes/authRoutes');
@@ -32,16 +33,15 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/projects/:projectId/tasks', taskRoutes);
 app.use('/api/tasks', taskRoutes);
 
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+const frontendDistPath = path.join(__dirname, '../frontend/dist');
 
-  app.use((req, res) => {
-    res.sendFile(
-      path.resolve(__dirname, '../frontend', 'dist', 'index.html')
-    );
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(frontendDistPath, 'index.html'));
   });
 } else {
-  // Base route
   app.get('/', (req, res) => {
     res.send('Team Task Manager API is running');
   });

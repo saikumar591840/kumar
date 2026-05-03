@@ -4,10 +4,13 @@ import AuthContext, { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import ProjectDetails from './pages/ProjectDetails';
 import Tasks from './pages/Tasks';
+import Calendar from './pages/Calendar';
+import ActivityLog from './pages/ActivityLog';
 import Layout from './components/Layout';
 
 // Protected Route Component
@@ -50,6 +53,12 @@ function App() {
               </PublicRoute>
             } />
             
+            <Route path="/forgot-password" element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            } />
+            
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Layout><Dashboard /></Layout>
@@ -71,6 +80,18 @@ function App() {
             <Route path="/tasks" element={
               <ProtectedRoute>
                 <Layout><Tasks /></Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/calendar" element={
+              <ProtectedRoute>
+                <Layout><Calendar /></Layout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/activity" element={
+              <ProtectedRoute>
+                <Layout><ActivityLog /></Layout>
               </ProtectedRoute>
             } />
           </Routes>
