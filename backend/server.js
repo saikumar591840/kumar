@@ -16,10 +16,26 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Database connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Database connection with improved options
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
+  family: 4,
+  retryWrites: true,
+  w: 'majority'
+})
+  .then(() => {
+    console.log('MongoDB Connected');
+    // Start server only after successful MongoDB connection
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -38,7 +54,7 @@ const frontendDistPath = path.join(__dirname, '../frontend/dist');
 if (fs.existsSync(frontendDistPath)) {
   app.use(express.static(frontendDistPath));
 
-  app.get('*', (req, res) => {
+  app.use((req, res) => {
     res.sendFile(path.resolve(frontendDistPath, 'index.html'));
   });
 } else {
@@ -49,6 +65,3 @@ if (fs.existsSync(frontendDistPath)) {
 
 // Global Error Handler
 app.use(errorHandler);
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
