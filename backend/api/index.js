@@ -28,25 +28,34 @@ app.get('/api/health', (req, res) => {
 let cachedDb = null;
 
 async function connectToDatabase() {
-  if (cachedDb) {
+  if (cachedDb && mongoose.connection.readyState === 1) {
     return cachedDb;
   }
 
   try {
+    console.log('Connecting to MongoDB...');
     const connection = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000, // Increased to 10 seconds
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
       family: 4,
       retryWrites: true,
-      w: 'majority'
+      w: 'majority',
+      maxIdleTimeMS: 30000,
+      bufferCommands: false,
+      bufferMaxEntries: 0
     });
 
     cachedDb = connection;
-    console.log('MongoDB Connected');
+    console.log('✅ MongoDB Connected Successfully');
     return cachedDb;
   } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
+    console.error('❌ MongoDB connection error:', error.message);
+    console.error('Connection string used:', process.env.MONGO_URI ? 'Present' : 'Missing');
+    throw new Error(`Database connection failed: ${error.message}`);
   }
 }
 
@@ -56,8 +65,12 @@ app.use(async (req, res, next) => {
     await connectToDatabase();
     next();
   } catch (error) {
-    console.error('Database connection failed:', error);
-    res.status(500).json({ error: 'Database connection failed' });
+    console.error('Database middleware error:', error.message);
+    res.status(503).json({
+      error: 'Service temporarily unavailable',
+      message: 'Database connection failed. Please try again later.',
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
